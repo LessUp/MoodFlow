@@ -130,6 +130,9 @@ Page({
   goStats() {
     wx.navigateTo({ url: '/pages/stats/index' })
   },
+  goSearch() {
+    wx.navigateTo({ url: '/pages/search/index' })
+  },
   onChooseEmoji(e) {
     const mood = e.currentTarget.dataset.mood
     const key = this.data.selectedDateKey

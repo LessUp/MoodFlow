@@ -38,4 +38,5 @@
 <view class="tools">
   <button size="mini" bindtap="goStats">统计</button>
   <button size="mini" bindtap="goSettings">设置</button>
+  <button size="mini" bindtap="goSearch">搜索</button>
 </view>

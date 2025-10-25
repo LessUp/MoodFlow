@@ -1,0 +1,11 @@
+- 新增页面：pages/search/index（关键词、日期范围、表情过滤、时间线结果；暗色主题与导航栏联动）
+- 日历页：底部工具栏新增“搜索”入口（goSearch）
+- 统计页增强：
+  - 粒度切换（日/周/月）
+  - 趋势折线与占比环图（Canvas 实现，后续可替换为 ECharts 组件）
+  - 暗色主题适配、导航栏同步
+- 涉及文件：
+  - app.json
+  - pages/search/index.(json|js|wxml|wxss)
+  - pages/calendar/index.(wxml|js)
+  - pages/stats/index.(wxml|wxss|js)

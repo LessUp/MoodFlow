@@ -1,0 +1,9 @@
+- 统计页 ECharts 集成（含回退）：
+  - 新增组件：ec-canvas（支持多实例、init 获取 2D canvas 节点并按 dpr 缩放）
+  - 统计页注册 ec-canvas 组件并按 useEcharts 条件渲染
+  - JS 逻辑：尝试 require('/ec-canvas/echarts.js')，存在则初始化折线/环形 ECharts，否则回退到 Canvas 绘制
+  - 暗色主题适配：坐标轴、文字、背景随主题切换
+  - 文档：ec-canvas/README.md 提示放置 echarts.js 的路径与来源
+- 涉及文件：
+  - ec-canvas/(ec-canvas.{json,js,wxml,wxss}, README.md)
+  - pages/stats/index.(json|wxml|js)
