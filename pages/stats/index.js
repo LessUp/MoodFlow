@@ -166,20 +166,18 @@ Page({
         buckets.push({ label: pad(d.getMonth()+1)+'-'+pad(d.getDate()), start, end })
       }
     } else if (granularity === 'week') {
-      let end = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime() + oneDay - 1
-      for (let i = 11; i >= 0; i--) {
-        const wEnd = end - (11 - i)*7*oneDay
+      const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime() + oneDay - 1
+      for (let offset = 11; offset >= 0; offset--) {
+        const wEnd = endOfToday - offset*7*oneDay
         const wStart = wEnd - 6*oneDay
-        buckets.push({ label: 'W'+(i+1), start: wStart, end: wEnd })
+        buckets.push({ label: 'W'+(12 - offset), start: wStart, end: wEnd })
       }
     } else {
-      let y = now.getFullYear(); let m = now.getMonth()+1
-      for (let i = 11; i >= 0; i--) {
-        const yy = y - Math.floor((11 - i + (12 - m))/12)
-        const mm = ((m - (11 - i)) <= 0) ? (12 + (m - (11 - i))) : (m - (11 - i))
-        const start = new Date(yy, mm-1, 1).getTime()
-        const end = new Date(yy, mm, 0).getTime() + (oneDay - 1)
-        buckets.push({ label: yy+'-'+pad(mm), start, end })
+      for (let offset = 11; offset >= 0; offset--) {
+        const firstDay = new Date(now.getFullYear(), now.getMonth() - offset, 1)
+        const start = firstDay.getTime()
+        const end = new Date(firstDay.getFullYear(), firstDay.getMonth() + 1, 0).getTime() + (oneDay - 1)
+        buckets.push({ label: firstDay.getFullYear()+'-'+pad(firstDay.getMonth()+1), start, end })
       }
     }
     // count per bucket
@@ -195,8 +193,8 @@ Page({
     }
     // pie counts for the same span
     const pieMap = {}
-    const spanStart = buckets.length ? buckets[0].start : 0
-    const spanEnd = buckets.length ? buckets[buckets.length-1].end : 0
+    const spanStart = buckets.length ? Math.min(...buckets.map(b => b.start)) : 0
+    const spanEnd = buckets.length ? Math.max(...buckets.map(b => b.end)) : 0
     for (const k in all) {
       const e = all[k]
       const t = e && e.ts ? e.ts : 0
