@@ -144,10 +144,61 @@ Page({
     if (!t) { wx.showToast({ title: '请输入JSON', icon: 'none' }); return }
     try {
       const obj = JSON.parse(t)
-      const r = storage.mergeEntries(obj)
-      wx.showToast({ title: '导入完成', icon: 'success' })
-      this.setData({ importText: '' })
-      if (r && typeof r.updated === 'number') this.setData({ syncStatus: '合并更新 ' + r.updated })
+      if (!obj || typeof obj !== 'object' || Array.isArray(obj)) {
+        wx.showToast({ title: '数据需为对象映射', icon: 'none' })
+        return
+      }
+      for (const key in obj) {
+        const item = obj[key]
+        if (!item || typeof item !== 'object' || Array.isArray(item)) {
+          wx.showToast({ title: `记录 ${key} 格式错误`, icon: 'none' })
+          return
+        }
+        if (!Object.prototype.hasOwnProperty.call(item, 'ts')) {
+          wx.showToast({ title: `记录 ${key} 缺少 ts 字段`, icon: 'none' })
+          return
+        }
+        if (typeof item.ts !== 'number' || !Number.isFinite(item.ts)) {
+          wx.showToast({ title: `记录 ${key} 的 ts 非数字`, icon: 'none' })
+          return
+        }
+        const hasMood = Object.prototype.hasOwnProperty.call(item, 'mood')
+        const hasNote = Object.prototype.hasOwnProperty.call(item, 'note')
+        if (!hasMood && !hasNote) {
+          wx.showToast({ title: `记录 ${key} 缺少 mood/note 字段`, icon: 'none' })
+          return
+        }
+        if (hasMood && item.mood !== undefined && item.mood !== null && typeof item.mood !== 'string') {
+          wx.showToast({ title: `记录 ${key} 的 mood 需为字符串`, icon: 'none' })
+          return
+        }
+        if (hasNote && item.note !== undefined && item.note !== null && typeof item.note !== 'string') {
+          wx.showToast({ title: `记录 ${key} 的 note 需为字符串`, icon: 'none' })
+          return
+        }
+      }
+
+      const diff = storage.getMergeDiff(obj)
+      const { added = 0, updated = 0, deleted = 0 } = diff || {}
+      if (!added && !updated && !deleted) {
+        wx.showToast({ title: '没有可导入的更新', icon: 'none' })
+        return
+      }
+
+      wx.showModal({
+        title: '导入预览',
+        content: `新增 ${added} 条，更新 ${updated} 条，删除 ${deleted} 条。是否继续？`,
+        success: (res) => {
+          if (res.confirm) {
+            const r = storage.mergeEntries(obj)
+            wx.showToast({ title: '导入完成', icon: 'success' })
+            this.setData({ importText: '', syncStatus: `导入完成：新增 ${added}，更新 ${updated}，删除 ${deleted}` })
+            if (r && typeof r.updated === 'number' && r.updated !== (updated + deleted)) {
+              this.setData({ syncStatus: `导入完成：合并更新 ${r.updated}` })
+            }
+          }
+        }
+      })
     } catch (e) {
       wx.showToast({ title: 'JSON格式错误', icon: 'none' })
     }

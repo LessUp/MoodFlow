@@ -125,6 +125,29 @@ function clearEntry(dateKey) {
   return m
 }
 
+function getMergeDiff(entries) {
+  const current = getAllEntries()
+  const res = { added: 0, updated: 0, deleted: 0 }
+  if (!entries || typeof entries !== 'object') return res
+  for (const k in entries) {
+    const incoming = entries[k]
+    if (!incoming || typeof incoming !== 'object') continue
+    const mood = incoming.mood || ''
+    const note = incoming.note || ''
+    const ts = incoming.ts || 0
+    const cur = current[k]
+    const curTs = cur && cur.ts ? cur.ts : 0
+    if (ts <= curTs) continue
+    if (!cur || typeof cur !== 'object') {
+      if (mood || note) res.added++
+      continue
+    }
+    if (mood || note) res.updated++
+    else res.deleted++
+  }
+  return res
+}
+
 function mergeEntries(entries) {
   if (!entries || typeof entries !== 'object') return { updated: 0 }
   const m = getAllEntries()
@@ -148,4 +171,4 @@ function mergeEntries(entries) {
   return { updated }
 }
 
-module.exports = { migrateIfNeeded, getAllEntries, getEntry, getMap, getMood, getNote, setMood, setNote, clearEntry, mergeEntries }
+module.exports = { migrateIfNeeded, getAllEntries, getEntry, getMap, getMood, getNote, setMood, setNote, clearEntry, mergeEntries, getMergeDiff }
