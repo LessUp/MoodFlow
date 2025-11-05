@@ -77,5 +77,36 @@ Page({
   onItemTap(e) {
     const key = e.currentTarget.dataset.datekey
     if (key) wx.navigateTo({ url: '/pages/detail/index?dateKey=' + key })
+  },
+  onExportResults() {
+    const list = this.data.results || []
+    if (!list.length) {
+      wx.showToast({ title: '暂无可导出的结果', icon: 'none' })
+      return
+    }
+    const map = {}
+    list.forEach(item => {
+      if (!item || !item.dateKey) return
+      map[item.dateKey] = {
+        mood: item.mood || '',
+        note: item.note || '',
+        ts: item.ts || Date.now()
+      }
+    })
+    if (Object.keys(map).length === 0) {
+      wx.showToast({ title: '暂无可导出的结果', icon: 'none' })
+      return
+    }
+    map.__exportedAt = new Date().toISOString()
+    const text = JSON.stringify(map, null, 2)
+    wx.setClipboardData({
+      data: text,
+      success: () => {
+        wx.showToast({ title: '已复制到剪贴板', icon: 'success' })
+      },
+      fail: () => {
+        wx.showToast({ title: '复制失败', icon: 'none' })
+      }
+    })
   }
 })

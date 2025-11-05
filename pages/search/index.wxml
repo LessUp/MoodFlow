@@ -26,13 +26,14 @@
     <view class="row">
       <button class="primary" bindtap="doSearch">搜索</button>
       <button class="plain" bindtap="onClearFilters">清空</button>
+      <button class="plain export-btn" bindtap="onExportResults" disabled="{{results.length === 0}}">导出JSON</button>
     </view>
   </view>
 
   <view class="section">
     <view class="label">结果</view>
     <block wx:if="{{results.length === 0}}">
-      <view class="empty">暂无匹配记录</view>
+      <view class="empty">暂无匹配记录，暂时无法导出</view>
     </block>
     <view class="list" wx:else>
       <block wx:for="{{results}}" wx:key="dateKey">
