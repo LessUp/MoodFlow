@@ -12,6 +12,13 @@ App({
         setTimeout(() => { try { sync.syncAll() } catch(e) {} }, 0)
       }
     } catch (e) {}
+    try {
+      const s = settings.getSettings()
+      this.globalData = Object.assign({}, this.globalData || {}, {
+        accentColor: s.accentColor || '#07c160',
+        language: s.language || 'zh'
+      })
+    } catch (e) {}
   },
   onLocalDataChange() {
     try {
@@ -20,6 +27,13 @@ App({
       const ok = cloud.initCloud()
       if (!ok) return
       setTimeout(() => { try { sync.syncAll() } catch(e) {} }, 0)
+    } catch (e) {}
+  },
+  onHide() {
+    try {
+      if (storage.hasEncryptionEnabled()) {
+        storage.lock()
+      }
     } catch (e) {}
   }
 })

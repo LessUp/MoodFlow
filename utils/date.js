@@ -38,7 +38,10 @@ function buildMonthGrid(year, month, weekStart = 1) {
   return arr
 }
 
-function monthLabel(year, month) {
+function monthLabel(year, month, lang) {
+  if (lang === 'en') {
+    return year + '-' + pad(month)
+  }
   return year + '年' + month + '月'
 }
 
@@ -52,10 +55,12 @@ function nextMonth(year, month) {
   return { year, month: month + 1 }
 }
 
-function weekHeaders(weekStart = 1) {
-  const monToSun = ['一','二','三','四','五','六','日']
+function weekHeaders(weekStart = 1, lang = 'zh') {
+  const zhMonToSun = ['一','二','三','四','五','六','日']
+  const enMonToSun = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
+  const monToSun = lang === 'en' ? enMonToSun : zhMonToSun
   if (weekStart === 0) {
-    return ['日','一','二','三','四','五','六']
+    return lang === 'en' ? ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'] : ['日','一','二','三','四','五','六']
   }
   return monToSun
 }

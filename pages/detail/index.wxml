@@ -1,25 +1,33 @@
-<view class="container {{theme === 'dark' ? 'theme-dark' : 'theme-light'}}">
+<view class="container {{theme === 'dark' ? 'theme-dark' : 'theme-light'}}" style="--accent-color: {{accentColor}};">
   <view class="section">
-    <view class="label">日期</view>
+    <view class="label">{{i18n.date}}</view>
     <view class="value date">{{dateKey}}</view>
   </view>
 
-  <view class="section">
-    <view class="label">选择心情</view>
-    <view class="emoji-grid">
-      <block wx:for="{{emojiOptions}}" wx:key="*this">
-        <view class="emoji-item {{item === mood ? 'selected' : ''}}" data-mood="{{item}}" bindtap="onChooseEmoji">{{item}}</view>
-      </block>
+  <block wx:if="{{dataLocked}}">
+    <view class="section locked-banner">
+      <text class="locked-text">{{i18n.lockedMessage}}</text>
     </view>
-  </view>
+  </block>
 
-  <view class="section">
-    <view class="label">备注</view>
-    <textarea class="note" placeholder="写点备注..." value="{{note}}" bindinput="onNoteInput" maxlength="200"></textarea>
-  </view>
+  <block wx:else>
+    <view class="section">
+      <view class="label">{{i18n.selectMood}}</view>
+      <view class="emoji-grid">
+        <block wx:for="{{emojiOptions}}" wx:key="*this">
+          <view class="emoji-item {{item === mood ? 'selected' : ''}}" data-mood="{{item}}" bindtap="onChooseEmoji">{{item}}</view>
+        </block>
+      </view>
+    </view>
 
-  <view class="actions">
-    <button class="btn primary" bindtap="onSave">保存</button>
-    <button class="btn warn" bindtap="onClear">清除</button>
-  </view>
+    <view class="section">
+      <view class="label">{{i18n.note}}</view>
+      <textarea class="note" placeholder="{{i18n.notePlaceholder}}" value="{{note}}" bindinput="onNoteInput" maxlength="200"></textarea>
+    </view>
+
+    <view class="actions">
+      <button class="btn primary" style="background-color: {{accentColor}};" bindtap="onSave">{{i18n.save}}</button>
+      <button class="btn plain" bindtap="onClear">{{i18n.clear}}</button>
+    </view>
+  </block>
 </view>

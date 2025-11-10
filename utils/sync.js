@@ -89,4 +89,57 @@ async function syncAll() {
   return { updatedLocal, updatedRemote }
 }
 
-module.exports = { syncAll }
+async function createBackup(note = '') {
+  const ok = cloud.initCloud()
+  if (!ok) throw new Error('cloud not inited')
+  const userId = await cloud.getOpenId()
+  const db = cloud.getDb()
+  const coll = db.collection('mood_backups')
+  const data = storage.getAllEntries()
+  const payload = {
+    userId,
+    createdAt: Date.now(),
+    note: typeof note === 'string' ? note : '',
+    summary: { total: Object.keys(data).length },
+    payload: JSON.stringify(data || {})
+  }
+  const res = await coll.add({ data: payload })
+  return { id: res && res._id ? res._id : '', total: payload.summary.total }
+}
+
+async function listBackups(limit = 5) {
+  const ok = cloud.initCloud()
+  if (!ok) throw new Error('cloud not inited')
+  const userId = await cloud.getOpenId()
+  const db = cloud.getDb()
+  const coll = db.collection('mood_backups')
+  const res = await coll.where({ userId }).orderBy('createdAt', 'desc').limit(limit).get()
+  const list = (res && res.data) || []
+  return list.map(item => ({
+    id: item._id,
+    createdAt: item.createdAt,
+    note: item.note || '',
+    total: item.summary && typeof item.summary.total === 'number' ? item.summary.total : 0
+  }))
+}
+
+async function restoreBackup(id) {
+  const ok = cloud.initCloud()
+  if (!ok) throw new Error('cloud not inited')
+  const db = cloud.getDb()
+  const coll = db.collection('mood_backups')
+  const res = await coll.doc(id).get()
+  const item = res && res.data ? res.data : null
+  if (!item) throw new Error('backup not found')
+  let payload = {}
+  if (item.payload && typeof item.payload === 'string') {
+    try { payload = JSON.parse(item.payload) } catch (e) { payload = {} }
+  } else if (item.data && typeof item.data === 'object') {
+    payload = item.data
+  }
+  const diff = storage.getMergeDiff(payload)
+  const mergeRes = storage.mergeEntries(payload)
+  return { diff, mergeRes }
+}
+
+module.exports = { syncAll, createBackup, listBackups, restoreBackup }

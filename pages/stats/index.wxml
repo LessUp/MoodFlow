@@ -1,34 +1,60 @@
-<view class="container {{theme === 'dark' ? 'theme-dark' : 'theme-light'}}">
-  <view class="section">
-    <view class="label">趋势与占比</view>
+<view class="container {{theme === 'dark' ? 'theme-dark' : 'theme-light'}}" style="--accent-color: {{accentColor}};">
+  <view class="section charts">
+    <view class="label">{{i18n.trendTitle}}</view>
     <view class="seg">
-      <view class="seg-item {{granularity === 'day' ? 'on' : ''}}" data-g="day" bindtap="onGranularityTap">日</view>
-      <view class="seg-item {{granularity === 'week' ? 'on' : ''}}" data-g="week" bindtap="onGranularityTap">周</view>
-      <view class="seg-item {{granularity === 'month' ? 'on' : ''}}" data-g="month" bindtap="onGranularityTap">月</view>
+      <view class="seg-item {{granularity === 'day' ? 'on' : ''}}" data-g="day" bindtap="onGranularityTap">{{i18n.dayLabel}}</view>
+      <view class="seg-item {{granularity === 'week' ? 'on' : ''}}" data-g="week" bindtap="onGranularityTap">{{i18n.weekLabel}}</view>
+      <view class="seg-item {{granularity === 'month' ? 'on' : ''}}" data-g="month" bindtap="onGranularityTap">{{i18n.monthLabel}}</view>
     </view>
-    <block wx:if="{{useEcharts}}">
-      <ec-canvas id="trendEC" canvas-id="trendEC" class="chart"></ec-canvas>
-      <ec-canvas id="pieEC" canvas-id="pieEC" class="chart"></ec-canvas>
-      <view class="hint">图表由 ECharts 渲染</view>
+    <view class="range">
+      <view class="range-title">{{i18n.rangeTitle}}</view>
+      <view class="range-row">
+        <picker mode="date" value="{{rangeStart}}" bindchange="onRangeStartChange"><view class="picker">{{rangeStart}}</view></picker>
+        <text class="range-sep">-</text>
+        <picker mode="date" value="{{rangeEnd}}" bindchange="onRangeEndChange"><view class="picker">{{rangeEnd}}</view></picker>
+      </view>
+      <view class="button-row">
+        <button class="primary" style="background-color: {{accentColor}};" bindtap="onRangeApply">{{i18n.rangeApply}}</button>
+        <button class="plain" bindtap="onRangeReset">{{i18n.rangeReset}}</button>
+      </view>
+    </view>
+    <block wx:if="{{dataLocked}}">
+      <view class="locked">{{i18n.lockedMessage}}</view>
+    </block>
+    <block wx:elif="{{totalCount === 0}}">
+      <view class="empty">{{i18n.noDataTip}}</view>
     </block>
     <block wx:else>
-      <canvas canvas-id="trendCanvas" class="chart"></canvas>
-      <canvas canvas-id="pieCanvas" class="chart"></canvas>
-      <view class="hint">图表由 Canvas 绘制（未集成 ECharts）</view>
+      <block wx:if="{{useEcharts}}">
+        <ec-canvas id="trendEC" canvas-id="trendEC" class="chart"></ec-canvas>
+        <ec-canvas id="pieEC" canvas-id="pieEC" class="chart"></ec-canvas>
+        <view class="hint">{{i18n.echartsHint}}</view>
+      </block>
+      <block wx:else>
+        <canvas canvas-id="trendCanvas" class="chart"></canvas>
+        <canvas canvas-id="pieCanvas" class="chart"></canvas>
+        <view class="hint">{{i18n.canvasHint}}</view>
+      </block>
     </block>
   </view>
-  <view wx:if="{{totalCount === 0}}" class="section empty">
-    <view class="empty-title">暂无数据</view>
-    <view class="empty-tip">去日历页记录今日心情吧</view>
+
+  <view wx:if="{{!dataLocked && totalCount > 0}}" class="section summary">
+    <view class="label">{{i18n.summaryTitle}}</view>
+    <view class="summary-grid">
+      <view class="summary-item">{{summaryAverageLabel}}</view>
+      <view class="summary-item">{{summaryTopMoodLabel}}</view>
+      <view class="summary-item">{{summaryQuietLabel}}</view>
+    </view>
+    <button class="primary small" style="background-color: {{accentColor}};" bindtap="onCopySummary">{{i18n.copySummary}}</button>
   </view>
 
-  <view wx:if="{{totalCount > 0}}" class="section">
-    <view class="label">连续记录天数</view>
-    <view class="value large">{{streakDays}} 天</view>
+  <view wx:if="{{!dataLocked && totalCount > 0}}" class="section streak">
+    <view class="label">{{i18n.streakLabel}}</view>
+    <view class="value">{{streakDays}} {{i18n.streakUnit}}</view>
   </view>
 
-  <view wx:if="{{totalCount > 0}}" class="section">
-    <view class="label">全部分布</view>
+  <view wx:if="{{!dataLocked && moodCounts.length > 0}}" class="section">
+    <view class="label">{{i18n.allDistribution}}</view>
     <view class="grid">
       <block wx:for="{{moodCounts}}" wx:key="mood">
         <view class="cell">
@@ -39,10 +65,10 @@
     </view>
   </view>
 
-  <view wx:if="{{totalCount > 0}}" class="section">
-    <view class="label">{{monthLabel}} 分布</view>
+  <view wx:if="{{!dataLocked && rangeMoodCounts.length > 0}}" class="section">
+    <view class="label">{{i18n.rangeDistribution}}</view>
     <view class="grid">
-      <block wx:for="{{monthMoodCounts}}" wx:key="mood">
+      <block wx:for="{{rangeMoodCounts}}" wx:key="mood">
         <view class="cell">
           <text class="emoji">{{item.mood}}</text>
           <text class="count">{{item.count}}</text>

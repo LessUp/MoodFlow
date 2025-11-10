@@ -1,33 +1,111 @@
 const KEY_V1 = 'mood_records_v1'
 const KEY_V2 = 'mood_records_v2'
 
-function readV2() {
-  try {
-    const r = wx.getStorageSync(KEY_V2)
-    if (r && typeof r === 'object') return r
-    return {}
-  } catch (e) {
-    return {}
+const settings = require('./settings.js')
+const crypto = require('./crypto.js')
+
+let sessionKey = ''
+let encryptionLocked = false
+
+function getEncryptionConfig() {
+  const s = settings.getSettings()
+  return {
+    enabled: !!s.encryptionEnabled,
+    salt: s.encryptionSalt || '',
+    verifier: s.encryptionVerifier || '',
+    hint: s.encryptionHint || ''
   }
 }
 
+function hasEncryptionEnabled() {
+  const cfg = getEncryptionConfig()
+  return cfg.enabled && !!cfg.salt && !!cfg.verifier
+}
+
+function readRawV2() {
+  try { return wx.getStorageSync(KEY_V2) } catch (e) { return null }
+}
+
+function decodeRaw(raw) {
+  if (!raw) {
+    encryptionLocked = hasEncryptionEnabled() && !sessionKey
+    return {}
+  }
+  if (typeof raw === 'string') {
+    try { return decodeRaw(JSON.parse(raw)) } catch (e) { return {} }
+  }
+  if (raw && typeof raw === 'object' && raw.__encrypted) {
+    if (!sessionKey) {
+      encryptionLocked = true
+      return {}
+    }
+    try {
+      const text = crypto.decrypt(raw.payload || '', sessionKey, raw.iv || '')
+      const parsed = text ? JSON.parse(text) : {}
+      encryptionLocked = false
+      return parsed && typeof parsed === 'object' ? parsed : {}
+    } catch (e) {
+      encryptionLocked = true
+      return {}
+    }
+  }
+  encryptionLocked = false
+  return (raw && typeof raw === 'object') ? raw : {}
+}
+
+function readV2() {
+  const raw = readRawV2()
+  return decodeRaw(raw)
+}
+
 function writeV2(map) {
-  try { wx.setStorageSync(KEY_V2, map || {}) } catch (e) {}
+  const cfg = getEncryptionConfig()
+  if (cfg.enabled) {
+    if (!sessionKey) {
+      encryptionLocked = true
+      return false
+    }
+    try {
+      const enc = crypto.encrypt(JSON.stringify(map || {}), sessionKey)
+      const payload = Object.assign({ __encrypted: true }, enc)
+      wx.setStorageSync(KEY_V2, payload)
+      encryptionLocked = false
+      return true
+    } catch (e) {
+      encryptionLocked = true
+      return false
+    }
+  }
+  try {
+    wx.setStorageSync(KEY_V2, map || {})
+    encryptionLocked = false
+    return true
+  } catch (e) {
+    return false
+  }
 }
 
 function notifyChange() {
   try {
     const app = (typeof getApp === 'function') ? getApp() : null
     if (app && typeof app.onLocalDataChange === 'function') {
-      setTimeout(() => { try { app.onLocalDataChange() } catch(e) {} }, 0)
+      setTimeout(() => { try { app.onLocalDataChange() } catch (e) {} }, 0)
     }
   } catch (e) {}
 }
 
 function migrateIfNeeded() {
-  let v2 = null
-  try { v2 = wx.getStorageSync(KEY_V2) } catch (e) { v2 = null }
-  if (v2 && typeof v2 === 'object' && Object.keys(v2).length > 0) return v2
+  const raw = readRawV2()
+  const decoded = decodeRaw(raw)
+  if (raw && typeof raw === 'object' && raw.__encrypted) {
+    return decoded
+  }
+  if (raw && typeof raw === 'object' && Object.keys(raw).length > 0) {
+    return decoded
+  }
+  if (raw && typeof raw === 'string') {
+    if (Object.keys(decoded).length > 0) return decoded
+  }
 
   let v1 = null
   try { v1 = wx.getStorageSync(KEY_V1) } catch (e) { v1 = null }
@@ -42,8 +120,10 @@ function migrateIfNeeded() {
     return out
   }
 
-  if (!v2) { writeV2({}) }
-  return v2 || {}
+  if (!raw && !hasEncryptionEnabled()) {
+    writeV2({})
+  }
+  return decoded || {}
 }
 
 function getAllEntries() {
@@ -76,22 +156,29 @@ function getNote(dateKey) {
   return e && e.note ? e.note : ''
 }
 
+function ensureWrite(map) {
+  const ok = writeV2(map)
+  if (!ok) {
+    const err = new Error('ENCRYPTION_LOCKED')
+    err.code = 'ENCRYPTION_LOCKED'
+    throw err
+  }
+}
+
 function setMood(dateKey, mood) {
   const m = getAllEntries()
   if (mood) {
     m[dateKey] = Object.assign({}, m[dateKey] || {}, { mood, ts: Date.now() })
-  } else {
-    if (m[dateKey]) {
-      const note = m[dateKey].note
-      if (note) {
-        delete m[dateKey].mood
-        m[dateKey].ts = Date.now()
-      } else {
-        delete m[dateKey]
-      }
+  } else if (m[dateKey]) {
+    const note = m[dateKey].note
+    if (note) {
+      delete m[dateKey].mood
+      m[dateKey].ts = Date.now()
+    } else {
+      delete m[dateKey]
     }
   }
-  writeV2(m)
+  ensureWrite(m)
   notifyChange()
   return m
 }
@@ -102,17 +189,15 @@ function setNote(dateKey, note) {
   const text = typeof note === 'string' ? note : ''
   if (text) {
     m[dateKey] = Object.assign({}, has || {}, { note: text, ts: Date.now() })
-  } else {
-    if (has) {
-      if (has.mood) {
-        delete m[dateKey].note
-        m[dateKey].ts = Date.now()
-      } else {
-        delete m[dateKey]
-      }
+  } else if (has) {
+    if (has.mood) {
+      delete m[dateKey].note
+      m[dateKey].ts = Date.now()
+    } else {
+      delete m[dateKey]
     }
   }
-  writeV2(m)
+  ensureWrite(m)
   notifyChange()
   return m
 }
@@ -120,7 +205,7 @@ function setNote(dateKey, note) {
 function clearEntry(dateKey) {
   const m = getAllEntries()
   if (m[dateKey]) delete m[dateKey]
-  writeV2(m)
+  ensureWrite(m)
   notifyChange()
   return m
 }
@@ -168,9 +253,111 @@ function mergeEntries(entries) {
       updated++
     }
   }
-  writeV2(m)
-  notifyChange()
-  return { updated }
+  try {
+    ensureWrite(m)
+    notifyChange()
+    return { updated }
+  } catch (e) {
+    if (e && e.code === 'ENCRYPTION_LOCKED') {
+      return { updated: 0, locked: true }
+    }
+    throw e
+  }
 }
 
-module.exports = { migrateIfNeeded, getAllEntries, getEntry, getMap, getMood, getNote, setMood, setNote, clearEntry, mergeEntries, getMergeDiff }
+function unlock(passphrase) {
+  const cfg = getEncryptionConfig()
+  if (!cfg.enabled) {
+    sessionKey = ''
+    encryptionLocked = false
+    return { ok: true }
+  }
+  const pwd = typeof passphrase === 'string' ? passphrase : ''
+  if (!pwd) return { ok: false, reason: 'EMPTY' }
+  const hash = crypto.sha256(pwd + '|' + cfg.salt)
+  if (hash !== cfg.verifier) {
+    return { ok: false, reason: 'MISMATCH' }
+  }
+  const key = crypto.deriveKey(pwd, cfg.salt)
+  const raw = readRawV2()
+  if (raw && raw.__encrypted) {
+    try {
+      crypto.decrypt(raw.payload || '', key, raw.iv || '')
+    } catch (e) {
+      return { ok: false, reason: 'DECRYPT_FAIL' }
+    }
+  }
+  sessionKey = key
+  encryptionLocked = false
+  return { ok: true }
+}
+
+function lock() {
+  sessionKey = ''
+  encryptionLocked = hasEncryptionEnabled()
+}
+
+function enableEncryption(passphrase, hint = '') {
+  const pwd = typeof passphrase === 'string' ? passphrase : ''
+  if (pwd.length < 6) {
+    return { ok: false, reason: 'WEAK' }
+  }
+  const salt = crypto.randomSalt(16)
+  const key = crypto.deriveKey(pwd, salt)
+  const verifier = crypto.sha256(pwd + '|' + salt)
+  const data = getAllEntries()
+  try {
+    const enc = crypto.encrypt(JSON.stringify(data || {}), key)
+    wx.setStorageSync(KEY_V2, Object.assign({ __encrypted: true }, enc))
+    sessionKey = key
+    encryptionLocked = false
+    settings.setEncryptionSettings({ enabled: true, salt, verifier, hint })
+    return { ok: true }
+  } catch (e) {
+    sessionKey = ''
+    encryptionLocked = false
+    return { ok: false, reason: 'WRITE_FAILED' }
+  }
+}
+
+function disableEncryption() {
+  const data = readV2()
+  try {
+    wx.setStorageSync(KEY_V2, data || {})
+    sessionKey = ''
+    encryptionLocked = false
+    settings.setEncryptionSettings({ enabled: false })
+    return { ok: true }
+  } catch (e) {
+    return { ok: false, reason: 'WRITE_FAILED' }
+  }
+}
+
+function isLocked() {
+  return hasEncryptionEnabled() && (!!encryptionLocked || !sessionKey)
+}
+
+function getEncryptionHint() {
+  return getEncryptionConfig().hint || ''
+}
+
+module.exports = {
+  migrateIfNeeded,
+  getAllEntries,
+  getEntry,
+  getMap,
+  getMood,
+  getNote,
+  setMood,
+  setNote,
+  clearEntry,
+  mergeEntries,
+  getMergeDiff,
+  unlock,
+  lock,
+  enableEncryption,
+  disableEncryption,
+  isLocked,
+  hasEncryptionEnabled,
+  getEncryptionHint
+}

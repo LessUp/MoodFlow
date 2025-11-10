@@ -1,20 +1,20 @@
-<view class="container {{theme === 'dark' ? 'theme-dark' : 'theme-light'}}">
+<view class="container {{theme === 'dark' ? 'theme-dark' : 'theme-light'}}" style="--accent-color: {{accentColor}};">
   <view class="section">
-    <view class="label">关键词</view>
-    <input class="input" placeholder="搜索备注/日期/表情" value="{{keyword}}" bindinput="onKeywordInput" />
+    <view class="label">{{i18n.keywordLabel}}</view>
+    <input class="input" placeholder="{{i18n.keywordPlaceholder}}" value="{{keyword}}" bindinput="onKeywordInput" />
   </view>
 
   <view class="section">
-    <view class="label">日期范围</view>
-    <view class="row">
+    <view class="label">{{i18n.dateRangeLabel}}</view>
+    <view class="range-row">
       <picker mode="date" value="{{startDate}}" bindchange="onStartChange"><view class="picker">{{startDate}}</view></picker>
-      <text class="sep">至</text>
+      <text class="range-sep">-</text>
       <picker mode="date" value="{{endDate}}" bindchange="onEndChange"><view class="picker">{{endDate}}</view></picker>
     </view>
   </view>
 
   <view class="section">
-    <view class="label">表情过滤</view>
+    <view class="label">{{i18n.emojiFilterLabel}}</view>
     <view class="emoji-grid">
       <block wx:for="{{emojiOptions}}" wx:key="*this">
         <view class="emoji {{selectedEmojis[item] ? 'on' : ''}}" data-em="{{item}}" bindtap="onEmojiToggle">{{item}}</view>
@@ -23,28 +23,50 @@
   </view>
 
   <view class="section">
+    <view class="label">{{i18n.withNotesOnly}}</view>
     <view class="row">
-      <button class="primary" bindtap="doSearch">搜索</button>
-      <button class="plain" bindtap="onClearFilters">清空</button>
-      <button class="plain export-btn" bindtap="onExportResults" disabled="{{results.length === 0}}">导出JSON</button>
+      <switch checked="{{onlyWithNotes}}" bindchange="onNoteToggle" aria-label="{{i18n.withNotesOnly}}" />
+      <view class="label-inline">{{onlyWithNotes ? i18n.withNotesOnly : ''}}</view>
     </view>
   </view>
 
   <view class="section">
-    <view class="label">结果</view>
-    <block wx:if="{{results.length === 0}}">
-      <view class="empty">暂无匹配记录，暂时无法导出</view>
-    </block>
-    <view class="list" wx:else>
-      <block wx:for="{{results}}" wx:key="dateKey">
-        <view class="item" data-datekey="{{item.dateKey}}" bindtap="onItemTap">
-          <view class="left">
-            <view class="dk">{{item.dateKey}}</view>
-            <view class="note">{{item.note}}</view>
-          </view>
-          <view class="right">{{item.mood}}</view>
-        </view>
-      </block>
+    <view class="label">{{i18n.sortLabel}}</view>
+    <picker mode="selector" range="{{sortOptions}}" range-key="label" value="{{sortIndex}}" bindchange="onSortChange">
+      <view class="picker">{{sortOptions.length > 0 ? sortOptions[sortIndex].label : ''}}</view>
+    </picker>
+  </view>
+
+  <view class="section">
+    <view class="row actions">
+      <button class="primary" style="background-color: {{accentColor}};" bindtap="doSearch">{{i18n.searchButton}}</button>
+      <button class="plain" bindtap="onClearFilters">{{i18n.clearButton}}</button>
+      <button class="plain" bindtap="onExportResults">{{i18n.exportJson}}</button>
+      <button class="plain" bindtap="onExportCsv">{{i18n.exportCsv}}</button>
     </view>
   </view>
+
+  <block wx:if="{{dataLocked}}">
+    <view class="section locked">{{i18n.lockedMessage}}</view>
+  </block>
+
+  <block wx:else>
+    <view class="section">
+      <view class="label">{{i18n.resultsLabel}}</view>
+      <block wx:if="{{results.length === 0}}">
+        <view class="empty">{{i18n.emptyText}}</view>
+      </block>
+      <view class="list" wx:else>
+        <block wx:for="{{results}}" wx:key="dateKey">
+          <view class="item" data-datekey="{{item.dateKey}}" bindtap="onItemTap">
+            <view class="left">
+              <view class="dk">{{item.dateKey}}</view>
+              <view class="note">{{item.note}}</view>
+            </view>
+            <view class="right">{{item.mood}}</view>
+          </view>
+        </block>
+      </view>
+    </view>
+  </block>
 </view>

@@ -1,26 +1,180 @@
-.container { padding: 24rpx; }
-.section { background: #fff; border-radius: 16rpx; padding: 20rpx; margin-bottom: 20rpx; }
-.label { font-size: 28rpx; color: #555; margin-bottom: 12rpx; }
-.value.large { font-size: 40rpx; color: #111; font-weight: 600; }
-.grid { display: flex; flex-wrap: wrap; }
-.cell { width: 25%; padding: 20rpx 0; display: flex; flex-direction: column; align-items: center; }
-.emoji { font-size: 44rpx; }
-.count { font-size: 26rpx; color: #666; margin-top: 8rpx; }
-.empty { text-align: center; padding: 80rpx 20rpx; }
-.empty-title { font-size: 36rpx; color: #333; }
-.empty-tip { margin-top: 8rpx; font-size: 26rpx; color: #888; }
-.seg { display: flex; gap: 12rpx; }
-.seg-item { flex: 1; text-align: center; padding: 12rpx 0; background: #f5f5f5; border-radius: 12rpx; }
-.seg-item.on { background: #07c160; color: #fff; }
-.chart { width: 100%; height: 180px; margin-top: 8rpx; background: #fff; border-radius: 12rpx; }
-.hint { color: #999; font-size: 22rpx; margin-top: 6rpx; }
-
-.theme-dark { background-color: #0f0f0f; color: #eee; }
-.theme-dark .section { background: #161616; }
-.theme-dark .label { color: #bbb; }
-.theme-dark .value.large { color: #eee; }
-.theme-dark .count { color: #aaa; }
-.theme-dark .seg-item { background: #1c1c1c; color: #bbb; }
-.theme-dark .seg-item.on { background: #3ea76a; color: #fff; }
-.theme-dark .chart { background: #161616; }
-.theme-dark .hint { color: #777; }
+.container {
+  padding: 24rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+.section {
+  background: #ffffff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  box-sizing: border-box;
+  box-shadow: 0 6rpx 12rpx rgba(0, 0, 0, 0.04);
+}
+.label {
+  font-size: 30rpx;
+  color: #333;
+  margin-bottom: 16rpx;
+  font-weight: 500;
+}
+.seg {
+  display: flex;
+  gap: 12rpx;
+  margin-bottom: 16rpx;
+}
+.seg-item {
+  flex: 1;
+  text-align: center;
+  padding: 12rpx 0;
+  border-radius: 12rpx;
+  background: #f3f3f3;
+  color: #333;
+}
+.seg-item.on {
+  background: var(--accent-color, #07c160);
+  color: #fff;
+}
+.range-title {
+  font-size: 26rpx;
+  color: #666;
+  margin-bottom: 12rpx;
+}
+.range-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 12rpx;
+}
+.picker {
+  flex: 1;
+  background: #f7f7f7;
+  border-radius: 12rpx;
+  padding: 14rpx;
+  text-align: center;
+  font-size: 26rpx;
+  color: inherit;
+}
+.range-sep {
+  color: #999;
+}
+.button-row {
+  display: flex;
+  gap: 12rpx;
+}
+.primary {
+  background: var(--accent-color, #07c160);
+  color: #fff;
+  border-radius: 12rpx;
+  padding: 14rpx 28rpx;
+  font-size: 26rpx;
+}
+.primary.small {
+  align-self: flex-start;
+  padding: 12rpx 24rpx;
+  font-size: 24rpx;
+}
+.plain {
+  background: transparent;
+  color: var(--accent-color, #07c160);
+  border: 2rpx solid var(--accent-color, #07c160);
+  border-radius: 12rpx;
+  padding: 14rpx 28rpx;
+  font-size: 26rpx;
+}
+.chart {
+  width: 100%;
+  height: 200px;
+  background: #fff;
+  border-radius: 16rpx;
+  margin-top: 12rpx;
+}
+.hint {
+  font-size: 24rpx;
+  color: #888;
+  margin-top: 8rpx;
+}
+.locked {
+  padding: 32rpx 0;
+  text-align: center;
+  color: #999;
+  font-size: 26rpx;
+}
+.empty {
+  padding: 48rpx 0;
+  text-align: center;
+  color: #888;
+  font-size: 26rpx;
+}
+.summary-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+  margin-bottom: 16rpx;
+}
+.summary-item {
+  background: rgba(0, 0, 0, 0.03);
+  padding: 16rpx;
+  border-radius: 12rpx;
+  font-size: 26rpx;
+  color: #444;
+}
+.streak .value {
+  font-size: 40rpx;
+  color: #111;
+  font-weight: 600;
+}
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+}
+.cell {
+  width: 25%;
+  padding: 20rpx 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.emoji {
+  font-size: 44rpx;
+}
+.count {
+  font-size: 26rpx;
+  color: #666;
+  margin-top: 8rpx;
+}
+.theme-dark {
+  background-color: #0f0f0f;
+  color: #eee;
+}
+.theme-dark .section {
+  background: #161616;
+  box-shadow: 0 6rpx 12rpx rgba(0, 0, 0, 0.3);
+}
+.theme-dark .label {
+  color: #ddd;
+}
+.theme-dark .seg-item {
+  background: #1f1f1f;
+  color: #bbb;
+}
+.theme-dark .seg-item.on {
+  background: var(--accent-color, #3ea76a);
+  color: #fff;
+}
+.theme-dark .picker {
+  background: #1c1c1c;
+  color: #eee;
+}
+.theme-dark .summary-item {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ddd;
+}
+.theme-dark .count {
+  color: #aaa;
+}
+.theme-dark .hint {
+  color: #777;
+}
+.theme-dark .chart {
+  background: #161616;
+}

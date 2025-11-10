@@ -1,73 +1,139 @@
-<view class="container {{theme === 'dark' ? 'theme-dark' : 'theme-light'}}">
+<view class="container {{theme === 'dark' ? 'theme-dark' : 'theme-light'}}" style="--accent-color: {{accentColor}};">
   <view class="section">
-    <view class="label">周起始日</view>
+    <view class="label">{{i18n.weekStart}}</view>
     <view class="row">
-      <button class="opt {{weekStart === 1 ? 'active' : ''}}" data-val="1" bindtap="onWeekTap">周一</button>
-      <button class="opt {{weekStart === 0 ? 'active' : ''}}" data-val="0" bindtap="onWeekTap">周日</button>
+      <button class="opt {{weekStart === 1 ? 'active' : ''}}" data-val="1" bindtap="onWeekTap" aria-label="{{i18n.weekMonday}}">{{i18n.weekMonday}}</button>
+      <button class="opt {{weekStart === 0 ? 'active' : ''}}" data-val="0" bindtap="onWeekTap" aria-label="{{i18n.weekSunday}}">{{i18n.weekSunday}}</button>
     </view>
   </view>
 
   <view class="section">
-    <view class="label">主题</view>
+    <view class="label">{{i18n.theme}}</view>
     <view class="row">
-      <button class="opt {{theme === 'light' ? 'active' : ''}}" data-val="light" bindtap="onThemeTap">浅色</button>
-      <button class="opt {{theme === 'dark' ? 'active' : ''}}" data-val="dark" bindtap="onThemeTap">深色</button>
+      <button class="opt {{theme === 'light' ? 'active' : ''}}" data-val="light" bindtap="onThemeTap">{{i18n.themeLight}}</button>
+      <button class="opt {{theme === 'dark' ? 'active' : ''}}" data-val="dark" bindtap="onThemeTap">{{i18n.themeDark}}</button>
     </view>
   </view>
 
   <view class="section">
-    <view class="label">云同步</view>
-    <view class="row">
-      <switch checked="{{cloudEnabled}}" bindchange="onCloudSwitch" />
-      <input class="input" placeholder="云环境ID（如：xxx-yyy）" value="{{cloudEnvId}}" bindinput="onEnvIdInput" />
+    <view class="label">{{i18n.accent}}</view>
+    <view class="row accent-row">
+      <input class="input" placeholder="{{i18n.accentPlaceholder}}" value="{{accentDraft}}" bindinput="onAccentInput" />
+      <button class="primary" style="background-color: {{accentColor}};" bindtap="onSaveAccent">{{i18n.save}}</button>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="label">{{i18n.language}}</view>
+    <picker mode="selector" range="{{languages}}" range-key="label" value="{{languageIndex}}" bindchange="onLanguageChange">
+      <view class="picker-display">{{languages.length > 0 ? languages[languageIndex].label : ''}}</view>
+    </picker>
+  </view>
+
+  <view class="section">
+    <view class="label">{{i18n.cloud}}</view>
+    <view class="row cloud-row">
+      <switch checked="{{cloudEnabled}}" bindchange="onCloudSwitch" aria-label="{{i18n.cloud}}" />
+      <input class="input" placeholder="{{i18n.cloudEnvPlaceholder}}" value="{{cloudEnvId}}" bindinput="onEnvIdInput" />
     </view>
     <view class="row">
-      <button class="primary" bindtap="onSaveCloud">保存云配置</button>
-      <button class="primary" bindtap="onSyncNow">立即同步</button>
+      <button class="primary" style="background-color: {{accentColor}};" bindtap="onSaveCloud">{{i18n.saveCloud}}</button>
+      <button class="primary" style="background-color: {{accentColor}};" bindtap="onSyncNow">{{i18n.syncNow}}</button>
     </view>
     <view class="status">{{syncStatus}}</view>
   </view>
 
   <view class="section">
-    <view class="label">表情集合</view>
-    <input class="input" placeholder="输入连续的表情字符" value="{{emojiText}}" bindinput="onEmojiInput" />
+    <view class="label">{{i18n.backup}}</view>
+    <input class="input" placeholder="{{i18n.backupNotePlaceholder}}" value="{{backupNote}}" bindinput="onBackupNoteInput" />
     <view class="row">
-      <button class="primary" bindtap="onSaveEmoji">保存</button>
-      <button class="warn" bindtap="onReset">重置默认</button>
+      <button class="primary" style="background-color: {{accentColor}};" bindtap="onCreateBackup" loading="{{isLoadingBackups}}">{{i18n.createBackup}}</button>
+      <button class="plain" bindtap="onRefreshBackups" loading="{{isLoadingBackups}}">{{i18n.refreshBackup}}</button>
+    </view>
+    <view class="backup-list">
+      <block wx:if="{{backups.length === 0}}">
+        <view class="empty">{{i18n.backupEmpty}}</view>
+      </block>
+      <block wx:else>
+        <block wx:for="{{backups}}" wx:key="id">
+          <view class="backup-item">
+            <view class="backup-meta">
+              <text class="time">{{item.displayTime}}</text>
+              <text class="count">{{item.countLabel}}</text>
+            </view>
+            <view class="backup-note">{{item.note}}</view>
+            <button class="primary small" style="background-color: {{accentColor}};" data-id="{{item.id}}" bindtap="onRestoreBackup">{{i18n.restore}}</button>
+          </view>
+        </block>
+      </block>
     </view>
   </view>
 
   <view class="section">
-    <view class="label">颜色映射</view>
+    <view class="label">{{i18n.emojiSet}}</view>
+    <input class="input" placeholder="{{i18n.emojiPlaceholder}}" value="{{emojiText}}" bindinput="onEmojiInput" />
+    <view class="row">
+      <button class="primary" style="background-color: {{accentColor}};" bindtap="onSaveEmoji">{{i18n.save}}</button>
+      <button class="warn" bindtap="onReset">{{i18n.reset}}</button>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="label">{{i18n.colors}}</view>
     <view class="color-grid">
       <block wx:for="{{colorItems}}" wx:key="em">
         <view class="color-row">
           <text class="emoji">{{item.em}}</text>
-          <input class="color-input" placeholder="#RRGGBB" value="{{item.color}}" data-idx="{{index}}" bindinput="onColorInput" />
+          <input class="color-input" placeholder="{{i18n.colorPlaceholder}}" value="{{item.color}}" data-idx="{{index}}" bindinput="onColorInput" />
         </view>
       </block>
     </view>
     <view class="row">
-      <button class="primary" bindtap="onSaveColors">保存颜色</button>
+      <button class="primary" style="background-color: {{accentColor}};" bindtap="onSaveColors">{{i18n.saveColors}}</button>
     </view>
   </view>
 
   <view class="section">
-    <view class="label">数据</view>
+    <view class="label">{{i18n.encryption}}</view>
+    <view class="encryption-status">{{encryptionEnabled ? i18n.encryptionStatusOn : i18n.encryptionStatusOff}}</view>
+    <view wx:if="{{encryptionHint}}" class="hint">{{i18n.encryptionHintLabel.replace('{hint}', encryptionHint)}}</view>
+    <block wx:if="{{!encryptionEnabled}}">
+      <input class="input" password="true" placeholder="{{i18n.encryptionPassword}}" value="{{passwordInput}}" bindinput="onPasswordInput" />
+      <input class="input" password="true" placeholder="{{i18n.encryptionConfirm}}" value="{{passwordConfirm}}" bindinput="onPasswordConfirmInput" />
+      <input class="input" placeholder="{{i18n.encryptionHint}}" value="{{hintText}}" bindinput="onHintInput" />
+      <button class="primary" style="background-color: {{accentColor}};" bindtap="onEnableEncryption">{{i18n.encryptionEnable}}</button>
+    </block>
+    <block wx:else>
+      <view class="encryption-state">{{encryptionLocked ? i18n.encryptionLocked : i18n.encryptionUnlocked}}</view>
+      <block wx:if="{{encryptionLocked}}">
+        <input class="input" password="true" placeholder="{{i18n.encryptionPassword}}" value="{{unlockPassword}}" bindinput="onUnlockPasswordInput" />
+        <button class="primary" style="background-color: {{accentColor}};" bindtap="onUnlockEncryption">{{i18n.encryptionUnlock}}</button>
+      </block>
+      <block wx:else>
+        <view class="row">
+          <button class="primary" style="background-color: {{accentColor}};" bindtap="onLockEncryption">{{i18n.encryptionLock}}</button>
+          <button class="warn" bindtap="onDisableEncryption">{{i18n.encryptionDisable}}</button>
+        </view>
+      </block>
+    </block>
+  </view>
+
+  <view class="section">
+    <view class="label">{{i18n.data}}</view>
     <view class="row">
-      <button class="primary" bindtap="onExport">导出JSON</button>
-      <button class="warn" bindtap="onClearAll">清除全部</button>
+      <button class="primary" style="background-color: {{accentColor}};" bindtap="onExport">{{i18n.exportJson}}</button>
+      <button class="warn" bindtap="onClearAll">{{i18n.clearAll}}</button>
     </view>
     <view class="row">
-      <button class="primary" bindtap="goPrivacy">隐私政策</button>
+      <button class="plain" bindtap="goPrivacy">{{i18n.privacy}}</button>
     </view>
   </view>
 
   <view class="section">
-    <view class="label">导入JSON</view>
-    <textarea class="textarea" placeholder="贴入导出的 JSON 后点击导入" value="{{importText}}" bindinput="onImportInput"></textarea>
+    <view class="label">{{i18n.import}}</view>
+    <textarea class="textarea" placeholder="{{i18n.importPlaceholder}}" value="{{importText}}" bindinput="onImportInput"></textarea>
     <view class="row">
-      <button class="primary" bindtap="onImportApply">导入</button>
+      <button class="primary" style="background-color: {{accentColor}};" bindtap="onImportApply">{{i18n.importApply}}</button>
     </view>
   </view>
 </view>
