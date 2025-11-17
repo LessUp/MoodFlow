@@ -309,7 +309,7 @@ Page({
         chart.on('click', (params) => {
           if (params && params.seriesType === 'pie' && params.name) {
             const mood = params.name
-            wx.navigateTo({ url: '/pages/search/index?mood=' + encodeURIComponent(mood) })
+            this.goSearchWithMood(mood)
           }
         })
         return chart
@@ -496,10 +496,23 @@ Page({
     const arcs = this._pieArcs || []
     for (const arc of arcs) {
       if (ang >= arc.start && ang <= arc.end) {
-        wx.navigateTo({ url: '/pages/search/index?mood=' + encodeURIComponent(arc.mood) })
+        this.goSearchWithMood(arc.mood)
         break
       }
     }
+  },
+  goSearchWithMood(mood) {
+    if (!mood) return
+    const start = this.data.rangeStart || ''
+    const end = this.data.rangeEnd || ''
+    let url = '/pages/search/index?mood=' + encodeURIComponent(mood)
+    if (start) url += '&start=' + encodeURIComponent(start)
+    if (end) url += '&end=' + encodeURIComponent(end)
+    wx.navigateTo({ url })
+  },
+  onMoodCellTap(e) {
+    const mood = e.currentTarget.dataset.mood
+    if (mood) this.goSearchWithMood(mood)
   },
   drawTrendLine(xs, ys) {
     const ctx = wx.createCanvasContext('trendCanvas', this)

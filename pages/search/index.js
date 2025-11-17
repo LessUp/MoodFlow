@@ -40,6 +40,14 @@ Page({
     if (opt.mood) {
       sel[opt.mood] = true
       this.setData({ selectedEmojis: sel })
+    } else {
+      this.setData({ selectedEmojis: sel })
+    }
+    const patch = {}
+    if (opt.start) patch.startDate = opt.start
+    if (opt.end) patch.endDate = opt.end
+    if (Object.keys(patch).length) {
+      this.setData(patch)
     }
   },
   onShow() {
@@ -109,7 +117,7 @@ Page({
     }
   },
   onClearFilters() {
-    this.setData({ keyword: '', selectedEmojis: {}, onlyWithNotes: false })
+    this.setData({ keyword: '', selectedEmojis: {}, onlyWithNotes: false, onlyWithMood: false, onlyEmptyMood: false })
     this.doSearch()
   },
   doSearch() {

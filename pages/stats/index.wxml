@@ -57,7 +57,7 @@
     <view class="label">{{i18n.allDistribution}}</view>
     <view class="grid">
       <block wx:for="{{moodCounts}}" wx:key="mood">
-        <view class="cell">
+        <view class="cell" data-mood="{{item.mood}}" bindtap="onMoodCellTap">
           <text class="emoji">{{item.mood}}</text>
           <text class="count">{{item.count}}</text>
         </view>
@@ -69,7 +69,7 @@
     <view class="label">{{i18n.rangeDistribution}}</view>
     <view class="grid">
       <block wx:for="{{rangeMoodCounts}}" wx:key="mood">
-        <view class="cell">
+        <view class="cell" data-mood="{{item.mood}}" bindtap="onMoodCellTap">
           <text class="emoji">{{item.mood}}</text>
           <text class="count">{{item.count}}</text>
         </view>
